@@ -1,0 +1,7 @@
+README.md
+setup.py
+SongBirdRL.egg-info/PKG-INFO
+SongBirdRL.egg-info/SOURCES.txt
+SongBirdRL.egg-info/dependency_links.txt
+SongBirdRL.egg-info/requires.txt
+SongBirdRL.egg-info/top_level.txt

@@ -22,7 +22,9 @@ class SongBirdEnv(gym.Env):
         self.episode = [-1]
         self.current_step = 0
         self.episode_num = 0
-        self.song = [-1,2,3,4,1] #TODO 
+        self.song = [-1,2,1,3,3] #TODO 
+        self.prediction = [-1 for _ in range (len(self.song))]
+        self.previous_attempt = [False for _ in range (len(self.song))]
         self.total_reward = 0
 
     def _take_action(self, action):
@@ -30,11 +32,31 @@ class SongBirdEnv(gym.Env):
       self.episode.append(action)
 
     def _get_reward(self,action): ##Models Dopamine Secretion in Song Birds
-
+       reward = 0
        if (self.song[self.current_step] == action):
-          return (1*self.current_step*self.current_step)
+          correct_action = True
        else:
-          return 0
+          correct_action = False
+       if (self.prediction[self.current_step] == action):
+          correct_prediction = True
+       else:
+          correct_prediction = False 
+       
+       if (correct_action and correct_prediction):
+           if(self.previous_attempt[self.current_step]):
+              reward = 5
+           else:
+              reward = 10 
+              self.previous_attempt[self.current_step] = True
+
+       elif (correct_action and (not correct_prediction)):
+           reward = 10
+           self.prediction[self.current_step]= action
+           self.previous_attempt[self.current_step] = True
+       elif ((not correct_action) and correct_prediction):
+           reward = 0
+           self.previous_attempt[self.current_step] = False
+       return reward
 
     def step(self, action):
         # Execute one time step within the environment

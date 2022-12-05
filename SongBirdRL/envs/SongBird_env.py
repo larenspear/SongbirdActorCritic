@@ -7,7 +7,7 @@ class SongBirdEnv(gym.Env):
     """An OpenAI gym environment for song learning"""
     metadata = {'render.modes': ['human']}
 
-    def __init__(self,song_length=4,num_error_notes=5):
+    def __init__(self,song_length=4,num_error_notes=5,song=[-1,4,2,1,3]):
         super(SongBirdEnv, self).__init__()
         
         self.num_error_notes = num_error_notes
@@ -22,7 +22,7 @@ class SongBirdEnv(gym.Env):
         self.episode = [-1]
         self.current_step = 0
         self.episode_num = 0
-        self.song = [-1,2,1,3,3] #TODO 
+        self.song = song #TODO 
         self.prediction = [-1 for _ in range (len(self.song))]
         self.previous_attempt = [False for _ in range (len(self.song))]
         self.total_reward = 0

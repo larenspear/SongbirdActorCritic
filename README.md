@@ -2,7 +2,7 @@
 
 To create the environment, download conda build the environment from the environment.yml file using
 
-    conda env create --name envname --file=environments.yml
+    conda env create --name envname --file=environments.yml python=3.7.10
    
 The environment runs on 3.7.10 and may or may not work with other versions of Python.
 

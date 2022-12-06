@@ -4,6 +4,8 @@ To create the environment, download conda build the environment from the environ
 
     conda env create --name envname --file=environments.yml
    
+The environment runs on 3.7.10 and may or may not work with other versions of Python.
+
 To run A2C, 
 
 To run PPO, 

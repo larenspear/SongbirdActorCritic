@@ -4,7 +4,7 @@ import SongBirdRL
 import numpy as np
 from itertools import count
 from collections import namedtuple
-
+from matplotlib import pyplot as plt 
 import torch
 from torch.distributions.utils import probs_to_logits
 import torch.nn as nn
@@ -17,6 +17,8 @@ from torch.distributions import Categorical
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
+parser.add_argument('--gae', type=float, default=1, metavar='A',
+                    help='discount factor across episodes (default: 0.1)')
 parser.add_argument('--seed', type=int, default=543, metavar='N',
                     help='random seed (default: 543)')
 parser.add_argument('--render', action='store_true',
@@ -26,7 +28,7 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 args = parser.parse_args()
 
 
-env = gym.make('SongBirdRL',song_length=4)
+env = gym.make('SongBirdRL-v0',song_length=5,num_error_notes=8,song=[-1,3,3,2,1,2],gamma_across_episode=args.gae)
 env.reset()
 #torch.manual_seed(args.seed)
 state_size = env.observation_space.shape[0]
@@ -74,6 +76,7 @@ class Policy(nn.Module):
 
 model = Policy()
 optimizer = optim.Adam(model.parameters(), lr=lr)
+#scheduler=optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
 eps = np.finfo(np.float32).eps.item()
 
 
@@ -114,7 +117,7 @@ def finish_episode():
         returns.insert(0, R)
 
     returns = torch.tensor(returns)
-    returns = (returns - returns.mean()) / (returns.std() + eps)
+    #returns = (returns - returns.mean()) / (returns.std() + eps)
 
     for (log_prob, value), R in zip(saved_actions, returns):
         advantage = R - value.item()
@@ -134,7 +137,7 @@ def finish_episode():
     # perform backprop
     loss.backward()
     optimizer.step()
-
+    #scheduler.step(loss)
     # reset rewards and action buffer
     del model.rewards[:]
     del model.saved_actions[:]
@@ -142,7 +145,7 @@ def finish_episode():
 
 def main():
     running_reward = 0
-
+    reward_list = []
     # run infinitely many episodes
     for i_episode in count(1):
 
@@ -173,16 +176,23 @@ def main():
 
         # perform backprop
         finish_episode()
-
+        reward_list.append(running_reward)
         # log results
         if i_episode % args.log_interval == 0:
             print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                   i_episode, ep_reward, running_reward))
 
         # check if we have "solved" the cart pole problem
-        if running_reward > 25:
+        if (running_reward > 5*(env.song_length-1)) or (i_episode> 100000):
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(running_reward, t))
+            r_list=np.array(reward_list)
+            r_list= r_list/(5*env.song_length)
+            plt.title("A2C with successive step discounting , Song Length = 5") 
+            plt.xlabel("Number of Episodes") 
+            plt.ylabel("Normalized Reward") 
+            plt.plot(r_list) 
+            plt.show()
             break
 
 

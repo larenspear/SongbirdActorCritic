@@ -7,7 +7,7 @@ class SongBirdEnv(gym.Env):
     """An OpenAI gym environment for song learning"""
     metadata = {'render.modes': ['human']}
 
-    def __init__(self,song_length=4,num_error_notes=5,song=[-1,4,2,1,3]):
+    def __init__(self,song_length=4,num_error_notes=5,song=[-1,4,2,1,3],max_reward_per_note=10,baseline_reward_per_note=5,gamma_across_episode=0.99):
         super(SongBirdEnv, self).__init__()
         
         self.num_error_notes = num_error_notes
@@ -26,7 +26,10 @@ class SongBirdEnv(gym.Env):
         self.prediction = [-1 for _ in range (len(self.song))]
         self.previous_attempt = [False for _ in range (len(self.song))]
         self.total_reward = 0
-
+        self.max_reward_per_note = max_reward_per_note
+        self.baseline_reward_per_note = baseline_reward_per_note
+        self.discounted_reward_per_note = [self.baseline_reward_per_note for _ in range (len(self.song))]
+        self.gamma_across_episode = gamma_across_episode
     def _take_action(self, action):
     
       self.episode.append(action)
@@ -44,16 +47,19 @@ class SongBirdEnv(gym.Env):
        
        if (correct_action and correct_prediction):
            if(self.previous_attempt[self.current_step]):
-              reward = 5
+              reward = self.discounted_reward_per_note[self.current_step]
+              self.discounted_reward_per_note[self.current_step] *= self.gamma_across_episode
            else:
-              reward = 10 
+              reward =  self.max_reward_per_note
+              self.discounted_reward_per_note[self.current_step] = self.baseline_reward_per_note
               self.previous_attempt[self.current_step] = True
 
        elif (correct_action and (not correct_prediction)):
-           reward = 10
+           reward = self.max_reward_per_note
            self.prediction[self.current_step]= action
            self.previous_attempt[self.current_step] = True
-       elif ((not correct_action) and correct_prediction):
+           self.discounted_reward_per_note[self.current_step] = self.baseline_reward_per_note
+       elif (not correct_action):
            reward = 0
            self.previous_attempt[self.current_step] = False
        return reward

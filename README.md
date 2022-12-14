@@ -12,7 +12,7 @@ To install the SongbirdRL environment, do the following:
     cd SongBirdRL
     pip install -e .
  
-To create a SonBirdRL environment, you have to use the following code:
+To create a SongBirdRL environment, you have to use the following code:
  
      env = gym.make('SongBirdRL-v0',song_length=4,num_error_notes=5,song=[-1,4,2,1,3],max_reward_per_note=10,baseline_reward_per_note=5,gamma_across_episode=0.99)
    
